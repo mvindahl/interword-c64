@@ -1,0 +1,4092 @@
+;---------------------------------------
+;        Interword main program
+;---------------------------------------
+
+         *= $1800
+lib      = $c000
+init     = lib
+setc     = lib+3
+writ     = lib+6
+updt     = lib+9
+atoc     = lib+12
+opnw     = lib+15
+clsw     = lib+18
+invt     = lib+21
+scla     = lib+24
+scup     = lib+27
+scdn     = lib+30
+setx     = lib+33
+ishp     = lib+36
+
+lib2     = $0803
+udtdoc   = lib2
+scupx    = lib2+3
+scdnx    = lib2+6
+mpl      = lib2+9
+div      = lib2+12
+diw      = lib2+15
+ask      = lib2+18
+chkdir   = lib2+21
+erase    = lib2+24
+copy     = lib2+27
+paste    = lib2+30
+nomem    = lib2+33
+udtscr   = lib2+36
+udruler  = lib2+39
+clch     = lib2+42
+diskmen  = lib2+45
+ttfn     = lib2+48
+dfs      = lib2+51
+dfl      = lib2+54
+dfs2     = lib2+57
+dfl2     = lib2+60
+print    = lib2+63
+
+men      = $cc00
+mpt1     = men
+mpt2     = men+8
+
+scr80    = $9000
+
+mbot     = $4801
+mtop     = $8000
+doc1     = mbot
+doce     = doc1+1
+
+screen   = $8c00
+bitmap   = $a000
+adsp     = $80
+
+         jmp interw
+         .text " HIPHOP! "
+ch40     .byte 0
+width    .byte 0
+ruler    .byte 0
+format   .byte 0
+document .byte 0
+pagel    .byte 52
+page     .byte 0
+x        .byte 5
+y        .byte 0
+fx       .byte 0
+cpos     .word doc1
+spos     .word (scr80+$f0)
+         .byte $ff
+linelx   .byte 0
+linel    .byte 0,0,0,0,0,0,0,0,0,0,0
+         .byte 0,0,0,0,0,0,0,0,0,0,0
+         .byte $ff
+linehx   .byte 0
+lineh    .byte 0,0,0,0,0,0,0,0,0,0,0
+         .byte 0,0,0,0,0,0,0,0,0,0,0
+spacz    .byte 0,0,0,0,0,0,0,0,0,0,0
+         .byte 0,0,0,0,0,0,0,0,0,0
+fmatsx   .byte 0
+fmats    .byte 0,0,0,0,0,0,0,0,0,0,0
+         .byte 0,0,0,0,0,0,0,0,0,0,0
+blkb     .word 0
+blke     .word 0
+blk      .byte 0
+dcl      .byte <doc1,<doce
+dcm      .byte >doc1,>doce
+rm       .byte 0
+lm       .byte 0
+wd       .byte 0
+line     .text "                    "
+         .text "                    "
+         .text "                    "
+         .text "                    "
+topln    .text "                    "
+         .text "                    "
+         .text "                    "
+         .text "                    "
+botln    .text "                    "
+         .text "                    "
+         .text "                    "
+         .text "                    "
+cornln   .byte 0,0
+nmrt     .byte 0,0,0
+denm     .byte 0,0
+quotient .byte 0
+rul1     .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@a@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+lms      .byte 8,8,8
+rms      .byte 72,72,72
+dlfl     .text "s:"
+flnm     .text "            .txt"
+dcnames  .text "Navnl{pound}s        "
+naml     .byte 7
+rll      .byte 0,40,80
+fox      .byte 0
+foy      .byte 0
+flx      .byte 0
+fly      .byte 0
+fcx      .byte 0
+fcy      .byte 0
+fire     .byte 1
+rcnt     .byte 0
+rcrd     .byte 0,0
+xlm      .byte 0
+crd      .byte 0,0
+chs      .byte 0,0
+chc      .byte 0,0
+endbuf   .byte 0,255
+
+dfval    .byte 8,72,3,0,0
+col1     .byte 6
+col2     .byte 6
+col3     .byte 1
+
+;---------------------------------------
+
+intr1    ldx #$38
+         stx $d018
+         asl $d019
+         lda #<intr2
+         sta $0314
+         lda #>intr2
+         sta $0315
+         lda #$62
+         sta $d012
+         jsr movptr
+         jsr nofl
+         lda blk
+         bne i1jump3
+         dec flcnt
+         jmp i1jump4
+i1jump3  lda #1
+         sta flcnt
+         inc ftc
+         lda ftc
+         lsr a
+         and #7
+         tax
+         lda ftb,x
+         sta $d02a
+         sta $d02b
+i1jump4  lda 653
+         bne i1jump2
+         sta pause
+i1jump2  lda pause
+         beq i1jump1
+         dec pause
+i1jump1  jmp $ea31
+
+ftb      .byte 6,14,3,13,1,13,3,14
+ftc      .byte 0
+
+intr2    lda #$3a
+         bne i2
+i2       nop
+         nop
+         bit $ea
+         sta $d018
+         asl $d019
+         lda #<intr3
+         sta $0314
+         lda #>intr3
+         sta $0315
+         lda #$92
+         sta $d012
+         jmp $febc
+
+intr3    lda #$3c
+         bne i3
+i3       nop
+         nop
+         bit $ea
+         sta $d018
+         asl $d019
+         lda #<intr4
+         sta $0314
+         lda #>intr4
+         sta $0315
+         lda #$c2
+         sta $d012
+         jmp $febc
+
+intr4    lda #$3e
+         bne i4
+i4       nop
+         nop
+         bit $ea
+         sta $d018
+         asl $d019
+         lda #<intr1
+         sta $0314
+         lda #>intr1
+         sta $0315
+         lda #$ff
+         sta $d012
+         jmp $febc
+
+dfset    ldx ruler
+         lda dfval
+         sta dflm
+         sta lms,x
+         lda dfval+1
+         sta dfrm
+         sta rms,x
+         ldx #50
+         ldy dfval+2
+         jsr div
+         sty fln
+         ldx #7
+         ldy dfval+3
+         jsr mpl
+         stx cform
+         lda dfval+4
+         sta ch40
+         jsr scol
+         rts
+
+movptr   lda $dc00
+         sta jstk
+         and #$1f
+         cmp #$1f
+         beq mjump12
+         lda $d015
+         ora #$07
+         sta $d015
+mjump12  lda jstk
+         and #$01
+         bne mjump1
+         sec
+         lda pty
+         sbc spdy
+         sta pty
+         cmp #$32
+         bcs mjump1
+         lda #$32
+         sta pty
+mjump1   lda jstk
+         and #$02
+         bne mjump2
+         clc
+         lda pty
+         adc spdy
+         sta pty
+         bcs mjump5
+         cmp #$fa
+         bcc mjump2
+mjump5   lda #$f9
+         sta pty
+mjump2   lda jstk
+         and #$04
+         bne mjump3
+         sec
+         lda ptx
+         sbc spdx
+         sta ptx
+         lda ptx+1
+         sbc #0
+         sta ptx+1
+         bne mjump3
+         lda ptx
+         cmp #$18
+         bcs mjump3
+         lda #$18
+         sta ptx
+mjump3   lda jstk
+         and #$08
+         bne mjump4
+         clc
+         lda ptx
+         adc spdx
+         sta ptx
+         lda ptx+1
+         adc #0
+         sta ptx+1
+         beq mjump4
+         lda ptx
+         cmp #$58
+         bcc mjump4
+         lda #$57
+         sta ptx
+mjump4   ldx spdcy
+         cpx #$1f
+         beq mjump6
+         inx
+         stx spdcy
+mjump6   txa
+         lsr a
+         tax
+         lda spdtab,x
+         sta spdy
+         lda jstk
+         and #$03
+         cmp #$03
+         bne mjump7
+         lda spdcy
+         cmp #2
+         bcc mjump7
+         dec spdcy
+         dec spdcy
+mjump7   ldx spdcx
+         cpx #$1f
+         beq mjump9
+         inx
+         stx spdcx
+mjump9   txa
+         lsr a
+         tax
+         lda spdtab,x
+         sta spdx
+         lda jstk
+         and #$0c
+         cmp #$0c
+         bne mjump8
+         lda spdcx
+         cmp #2
+         bcc mjump8
+         dec spdcx
+         dec spdcx
+mjump8   lda pty
+         sta $d001
+         sta $d003
+         sta $d005
+         lda ptx
+         sta $d000
+         sta $d002
+         sta $d004
+         ldx ptx+1
+         lda $d010
+         and #$f8
+         ora xxtab,x
+         sta $d010
+         lda jstk
+         and #$10
+         cmp fire
+         beq mjump11
+         sta fire
+         cmp #0
+         beq mjump10
+         lda ptx+1
+         lsr a
+         lda ptx
+         ror a
+         sta flx
+         lda pty
+         sta fly
+         jmp mjump11
+mjump10  lda ptx+1
+         lsr a
+         lda ptx
+         ror a
+         sta fox
+         lda pty
+         sta foy
+mjump11  lda ptx+1
+         lsr a
+         lda ptx
+         ror a
+         sta fcx
+         lda pty
+         sta fcy
+         rts
+
+spdx     .byte 2
+spdy     .byte 2
+spdcx    .byte 0
+spdcy    .byte 0
+spdtab   .byte 1,1,2,2,2,2,3,3,4
+         .byte 4,4,5,5,5,5,6,7,8
+pty      .byte $32
+ptx      .byte $18,0
+jstk     .byte 0
+xxtab    .byte 0,7
+wdtab    .byte 78,39
+pause    .byte 0
+
+nofl     sec
+         lda fcy
+         sbc #$62
+         jsr nfs1
+         stx intr2+3
+         sec
+         lda fcy
+         sbc #$92
+         jsr nfs1
+         stx intr3+3
+         sec
+         lda fcy
+         sbc #$c2
+         jsr nfs1
+         stx intr4+3
+         rts
+nfs1     ldx #0
+         cmp #$15
+         bcc nfj1
+         ldx #2
+nfj1     cmp #$ea
+         bcs nfj2
+         ldx #2
+nfj2     rts
+
+getchar  lda pause
+         bne gcjump2
+         lda 653
+         cmp #4
+         bne gcjump1
+         lda #10
+         sta pause
+         lda #31
+         rts
+gcjump1  cmp #3
+         bne gcjump2
+         lda #10
+         sta pause
+         lda #129
+         rts
+gcjump2  lda $c6
+         cmp #11
+         bcc gcj6
+         lda #0
+         sta $c6
+gcj6     jsr $ffe4
+         cmp #192
+         bcs gcj3
+         cmp #133
+         bcc gcj3
+         ldx #0
+gcl1     cmp keys,x
+         beq gcj4
+         inx
+         cpx #58
+         bne gcl1
+gcj3     rts
+gcj4     lda flash
+         beq gcj5
+         txa
+         pha
+         lda #0
+         sta flash
+         jsr invc
+         pla
+         tax
+gcj5     pla
+         pla
+         jmp jsmen
+
+interw   sei
+         lda #$0b
+         sta $d011
+         lda dflm
+         sta lms
+         sta lms+1
+         sta lms+2
+         lda dfrm
+         sta rms
+         sta rms+1
+         sta rms+2
+         jsr dfl
+         jsr dfset
+         jsr dfl2
+         sei
+         lda #$0b
+         sta $d011
+         lda #$16
+         sta $01
+         lda #13
+         sta doc1-1
+         lda #0
+         sta doc1
+         ldx ch40
+         lda wdtab,x
+         sta width
+         lda #$18
+         sta $d01b
+         lda #0
+         sta flash
+         lda #1
+         sta flcnt
+         jsr init
+         lda #1
+         sta $dd00
+         ldx #$00
+loop3    lda #$ff
+         sta bitmap+$17c0,x
+         inx
+         cpx #15
+         bne loop3
+         lda #$c0
+         sta $d01d
+         ora $d015
+         sta $d015
+         lda #$f4
+         sta $d00d
+         sta $d00f
+         lda #1
+         sta $d02d
+         sta $d02e
+         lda #$5f+adsp
+         sta screen+$03fe
+         sta screen+$03ff
+         jsr scol
+         lda #0
+         jsr slide
+         ldx #0
+         jsr udruler
+         jsr udram
+         lda #$f0
+         clc
+         adc lm
+         sta spos
+         lda #$64
+         adc #0
+         sta spos+1
+         lda lm
+         sta x
+         ldx format
+         jsr udform
+         ldx #0
+         ldy #0
+         lda #0
+         jsr setc
+         ldx #<tpln1
+         ldy #>tpln1
+         lda #1
+         jsr writ
+         ldx #<doc1
+         ldy #>doc1
+         lda #0
+         jsr udtdoc
+         jsr udscr
+         lda #$1b
+         sta $d011
+         lda #<intr1
+         sta $0314
+         lda #>intr1
+         sta $0315
+         asl $d019
+         lda #$1b
+         sta $d011
+         lda #$00
+         sta $d012
+         lda #$7f
+         sta $dc0d
+         lda #$81
+         sta $d01a
+         cli
+loop1    ldx y
+         inx
+         lda fmats,x
+         cmp format
+         beq jump20
+         sta format
+         tax
+         jsr udform
+jump20   lda flcnt
+         bne jump1
+         lda fln
+         sta flcnt
+         jsr invc
+         lda flash
+         eor #1
+         sta flash
+jump1    jsr getchar
+         cmp #0
+         beq jump3
+         cmp #129
+         bne jump5
+         jsr chmode
+         jmp jump3
+jump5    jsr input
+         jsr adjfx
+         lda #1
+         sta flcnt
+         lda char
+         and #$7f
+         cmp #"{down}"
+         beq jump6
+         lda x
+         sta wantx
+jump6    jsr udscr
+jump3    lda fire
+         beq loop1x
+         jmp loop1
+loop1x   lda flash
+         beq jump4
+         lda #0
+         sta flash
+         jsr invc
+jump4    lda foy
+         cmp #$3a
+         bcs jump2
+         jsr menus
+         ldx chosen
+         beq jump10
+         dex
+jsmen    txa
+         asl a
+         tax
+         lda optl,x
+         sta hopla+1
+         lda optl+1,x
+         sta hopla+2
+hopla    jsr $9000
+jump10   lda #1
+         sta flcnt
+jump11   jmp loop1
+jump14   lda crd+1
+         cmp #1
+         bne jump19
+         jsr icons
+         jmp jump10
+jump19   cmp #2
+         bne jump13
+         jsr adjrul
+         jmp jump10
+jump13   cmp #24
+         bne jump15
+         jsr movxbar
+jump15   jmp jump10
+jump2    ldx fox
+         ldy foy
+         jsr clch
+         beq jump14
+         jsr mcs
+         lda chc
+         sta blkb
+         sta blke
+         lda chc+1
+         sta blkb+1
+         sta blke+1
+         lda $d015
+         ora #$18
+         sta $d015
+         lda #0
+         cmp ch40
+         beq jump7
+         lda #$18
+jump7    ora #$c0
+         sta $d01d
+         ldx crd
+         ldy crd+1
+         lda #3
+         jsr setco
+         lda #1
+         sta blk
+loop2    ldx fcx
+         ldy fcy
+         jsr clch
+         beq jump11
+         lda chc
+         sta blke
+         lda chc+1
+         sta blke+1
+         ldx crd
+         ldy crd+1
+         lda #4
+         jsr setco
+         jsr swpc
+         lda fire
+         beq loop2
+         ldx flx
+         ldy fly
+         jsr clch
+         beq jump12
+         ldx crd
+         ldy crd+1
+         lda #4
+         jsr setco
+         jsr swpc
+         lda chc
+         sta blke
+         lda chc+1
+         sta blke+1
+         lda blkb+1
+         cmp blke+1
+         bcc jump9
+         bne jump8
+         lda blkb
+         cmp blke
+         bcc jump9
+         bne jump8
+         lda #0
+         sta blk
+         lda $d015
+         and #$e7
+         sta $d015
+         jmp jump9
+jump8    ldx blkb
+         lda blke
+         sta blkb
+         stx blke
+         ldx blkb+1
+         lda blke+1
+         sta blkb+1
+         stx blke+1
+jump9    jsr mcs
+jump12   jmp loop1
+
+all      .byte 0,2,0,21
+fln      .byte 16
+
+adjfx    lda x
+         sec
+         sbc fx
+         bmi axjump2
+         cmp #39
+         bcc axjump2
+         tax
+         lda #20
+         cpx #59
+         bcc axjump1
+         clc
+         adc #20
+axjump1  sta misc
+         lda fx
+         clc
+         adc misc
+         sta fx
+         tax
+         jsr setx
+         lda fx
+         jsr slide
+         lda width
+         sta all+2
+         ldx #<all
+         ldy #>all
+         lda ch40
+         beq axjump2
+         jsr updt
+         lda #1
+         sta flcnt
+axjump2  lda fx
+         sec
+         sbc x
+         beq axjump3
+         bmi axjump3
+         tax
+         lda #20
+         cpx #20
+         bcc axjump4
+         lda fx
+axjump4  sta misc
+         lda fx
+         sec
+         sbc misc
+         sta fx
+         tax
+         jsr setx
+         lda fx
+         jsr slide
+         lda width
+         sta all+2
+         ldx #<all
+         ldy #>all
+         lda ch40
+         beq axjump3
+         jsr updt
+         lda #1
+         sta flcnt
+axjump3  rts
+
+slide    asl a
+         sta misc
+         lsr a
+         tax
+         ldy #10
+         jsr div
+         tya
+         clc
+         adc misc
+         sta misc
+         adc #$9f
+         sta $d00c
+         ror farout
+         lda misc
+         clc
+         adc #$9f+36
+         sta $d00e
+         ror farout
+         lda farout
+         and #$c0
+         sta farout
+         lda $d010
+         and #$3f
+         ora farout
+         sta $d010
+         ldx #4
+         lda #0
+         cmp ch40
+         bne sljump1
+         lda #255
+sljump1  sta bitmap+$1fea,x
+         dex
+         bpl sljump1
+         rts
+
+slpos    .byte 0
+farout   .byte 0
+
+icons    lda crd
+         lsr a
+         lsr a
+         cmp #5
+         bcc isjump1
+         cmp #16
+         bcs isjump1
+         rts
+isjump1  sta misc
+         asl a
+         asl a
+         tax
+         ldy #1
+         lda #4
+         jsr invt
+isloop1  lda fire
+         beq isloop1
+         ldx flx
+         ldy fly
+         jsr clch
+         lda misc
+         asl a
+         asl a
+         tax
+         ldy #1
+         lda #4
+         jsr invt
+         lda crd+1
+         cmp #1
+         bne isjump2
+         lda crd
+         lsr a
+         lsr a
+         cmp misc
+         bne isjump2
+         cmp #0
+         bne isjump3
+         jmp o12
+isjump3  cmp #1
+         bne isjump4
+         jmp o13
+isjump4  cmp #2
+         bne isjump2
+         jmp o14
+isjump2  cmp #3
+         bne isj1
+         jmp o7
+isj1     cmp #4
+         bne isj2
+         jmp o8
+isj2     cmp #16
+         bcc isjump5
+         clc
+         adc #9
+         sta misc
+         sec
+         lda cpos
+         sbc #1
+         sta $fb
+         lda cpos+1
+         sbc #0
+         sta $fc
+         lda misc
+         ldy #0
+         cmp ($fb),y
+         beq isjump6
+         iny
+         cmp ($fb),y
+         beq isjump6
+         jsr tobuf
+isjump6  rts
+isjump5  rts
+
+tobuf    ldx $c6
+         cpx #9
+         bcs tbjump1
+         sei
+         sta $0277,x
+         inx
+         stx $c6
+         cli
+tbjump1  rts
+
+swpc     lda blkb+1
+         cmp blke+1
+         bcc swjump1
+         bne swjump2
+         lda blkb
+         cmp blke
+         bcs swjump2
+swjump1  lda #$3f+adsp
+         sta screen+$03fb
+         lda #$5e+adsp
+         sta screen+$03fc
+         rts
+swjump2  lda #$5e+adsp
+         sta screen+$03fb
+         lda #$3f+adsp
+         sta screen+$03fc
+         rts
+
+setco    sta misc
+         tya
+         asl a
+         asl a
+         asl a
+         clc
+         adc #$32
+         pha
+         lda misc
+         asl a
+         tay
+         pla
+         sta $d001,y
+         lda #0
+         sta crr
+         txa
+         ldx ch40
+         inx
+scloop1  asl a
+         rol crr
+         dex
+         bpl scloop1
+         clc
+         adc #$18
+         sta $d000,y
+         lda crr
+         adc #0
+         sta crr
+         lda #$fe
+         ldx misc
+scloop2  dex
+         bmi scjump1
+         sec
+         rol a
+         asl crr
+         jmp scloop2
+scjump1  and $d010
+         ora crr
+         sta $d010
+         rts
+
+crr      .byte 0
+
+mcs      lda crd
+         sta x
+         lda crd+1
+         sec
+         sbc #3
+         sta y
+         lda chs
+         sta spos
+         lda chs+1
+         sta spos+1
+         lda chc
+         sta cpos
+         lda chc+1
+         sta cpos+1
+         rts
+
+flash    .byte 0
+flcnt    .byte 1
+dctab    .byte $00,$01,$02,$03,$04
+         .byte $05,$06,$07,$08,$09
+         .byte $10,$11,$12,$13,$14
+         .byte $15,$16,$17,$18,$19
+         .byte $20,$21,$22,$23,$24
+         .byte $25,$26,$27,$28,$29
+         .byte $30,$31,$32,$33,$34
+         .byte $35,$36,$37,$38,$39
+         .byte $40,$41,$42,$43,$44
+         .byte $45,$46,$47,$48,$49
+         .byte $50,$51,$52,$53,$54
+         .byte $55,$56,$57,$58,$59
+         .byte $60,$61,$62,$63,$64
+         .byte $65,$66,$67,$68,$69
+         .byte $70,$71,$72,$73,$74
+         .byte $75,$76,$77,$78,$79
+         .byte $80,$81,$82,$83,$84
+         .byte $85,$86,$87,$88,$89
+         .byte $90,$91,$92,$93,$94
+         .byte $95,$96,$97,$98,$99
+
+udscr    ldx x
+         cpx oldx
+         beq usjump1
+         stx oldx
+         inx
+         lda #32
+         sta uxt
+         sta uxt+1
+         ldy #0
+         lda dctab,x
+         and #$f0
+         lsr a
+         lsr a
+         lsr a
+         lsr a
+         ora #$30
+         sta uxt,y
+         cmp #$30
+         beq usjump2
+         iny
+usjump2  lda dctab,x
+         and #$0f
+         ora #$30
+         sta uxt,y
+         ldx #3
+         ldy #24
+         lda #0
+         jsr setc
+         ldx #<uxt
+         ldy #>uxt
+         lda #0
+         jsr writ
+usjump1  lda y
+         clc
+         adc cornln
+         sta toty
+         lda #0
+         adc cornln+1
+         sta toty+1
+         lda toty
+         cmp oldy
+         bne usjump3x
+         jmp usjump3
+usjump3x sta oldy
+         clc
+         adc #1
+         sta toty
+         lda toty+1
+         sta oldy+1
+         adc #0
+         sta toty+1
+         ldx #0
+         ldy #0
+usloop1  sec
+         lda toty
+         sbc #100
+         bcs usjump5
+         dec toty+1
+         lda toty+1
+         cmp #255
+         beq usjump4
+usjump5  inx
+         jmp usloop1
+usjump4  lda #32
+         sta uyt
+         sta uyt+1
+         sta uyt+2
+         sta uyt+3
+         ldy #0
+         cpx #0
+         beq usjump6
+         lda dctab,x
+         and #$f0
+         beq usjump7
+         lsr a
+         lsr a
+         lsr a
+         lsr a
+         ora #$30
+         sta uyt,y
+         iny
+usjump7  lda dctab,x
+         and #$0f
+         ora #$30
+         sta uyt,y
+         iny
+usjump6  stx misc
+         ldx toty
+         lda dctab,x
+         lsr a
+         lsr a
+         lsr a
+         lsr a
+         ora #$30
+         sta uyt,y
+         sta misc+1
+         lda misc
+         bne usjump8
+         lda misc+1
+         cmp #$30
+         beq usjump9
+usjump8  iny
+usjump9  lda dctab,x
+         and #$0f
+         ora #$30
+         sta uyt,y
+         ldx #9
+         ldy #24
+         lda #0
+         jsr setc
+         ldx #<uyt
+         ldy #>uyt
+         lda #0
+         jsr writ
+         ldx #20
+         ldy #24
+         lda #0
+         jsr setc
+         ldx #<uyt
+         ldy #>uyt
+         lda #0
+         jsr writ
+usjump3  rts
+
+uxt      .text "  "
+         .byte 0,0
+uyt      .text "    "
+         .byte 0,0
+toty     .byte 0,0
+misc     .byte 0,0
+oldx     .byte 255
+oldy     .byte 255,255
+
+chmode   lda #$0b
+         sta $d011
+         lda ch40
+         eor #1
+         sta ch40
+         tax
+         lda wdtab,x
+         sta width
+         sta chud+2
+         ldx ruler
+         jsr udruler
+         ldx #0
+         jsr setx
+         lda slpos
+         jsr slide
+         ldx #<chud
+         ldy #>chud
+         lda ch40
+         jsr updt
+         lda #0
+         sta flash
+         sta blk
+         sta fx
+         lda $d015
+         and #$e7
+         sta $d015
+         lda #1
+         sta flcnt
+         lda #$1b
+         sta $d011
+         rts
+
+chud     .byte 0,3,0,21
+
+menus    ldx #0
+         ldy #0
+         lda #0
+         jsr setc
+         ldx #<tpln2
+         ldy #>tpln2
+         lda #1
+         jsr writ
+         lda #255
+         sta opt
+         sta menu
+mnloop1  lda #0
+         sta chosen
+         lda fcy
+         cmp #$3a
+         bcc mnjump4a
+         jmp mnjump4
+mnjump4a lda fcx
+         sec
+         sbc #$0c
+         lsr a
+         tax
+         lda mndat,x
+         cmp #$20
+         beq mnjump1a
+         and #$07
+         cmp menu
+         bne mnjump1b
+mnjump1a jmp mnjump1
+mnjump1b sta nwmn
+         ldy menu
+         cpy #$ff
+         beq mnjump2
+         lda mdr,y
+         ldx mdx,y
+         ldy #0
+         jsr invt
+         ldy menu
+         ldx mpt1,y
+         lda mpt2,y
+         tay
+         lda ch40
+         jsr clsw
+mnjump2  lda nwmn
+         sta menu
+         tay
+         lda mdr,y
+         ldx mdx,y
+         ldy #0
+         jsr invt
+         ldy menu
+         ldx mpt1,y
+         lda mpt2,y
+         tay
+         lda ch40
+         jsr opnw
+         inx
+         stx mnps
+         dey
+         dey
+         sty mnwt
+         sta mnht
+         lda mnps
+         asl a
+         adc #$09
+         sta minx
+         lda mnps
+         adc mnwt
+         asl a
+         adc #$0e
+         sta maxx
+         lda #255
+         sta opt
+         jmp mnjump1
+mnjump4  lda menu
+         cmp #255
+         beq mnjump1
+         lda fcx
+         cmp minx
+         bcc mnjump1
+         cmp maxx
+         bcs mnjump1
+         lda fcy
+         sec
+         sbc #$3a
+         lsr a
+         lsr a
+         lsr a
+         cmp mnht
+         bcs mnjump1
+         sta nmpt
+         ldx menu
+         adc tb1,x
+         tay
+         lda tb2,y
+         beq mnjump1
+         sta chosen
+         lda nmpt
+         cmp opt
+         beq mnjump1
+         ldy opt
+         cpy #255
+         beq mnjump5
+         iny
+         ldx mnps
+         lda mnwt
+         jsr invt
+mnjump5  ldy nmpt
+         sty opt
+         iny
+         ldx mnps
+         lda mnwt
+         jsr invt
+mnjump1  lda opt
+         cmp #255
+         beq mnjump6
+         lda fcx
+         cmp maxx
+         bcs mnjump7
+         cmp minx
+         bcc mnjump7
+         lda fcy
+         sec
+         sbc #$3a
+         bcc mnjump7
+         lsr a
+         lsr a
+         lsr a
+         cmp mnht
+         bcs mnjump7
+         ldx menu
+         adc tb1,x
+         tay
+         lda tb2,y
+         beq mnjump7
+         jmp mnjump6
+mnjump7  ldy opt
+         iny
+         ldx mnps
+         lda mnwt
+         jsr invt
+         lda #255
+         sta opt
+mnjump6  lda fire
+         bne mnloop1a
+         jmp mnloop1
+mnloop1a ldy menu
+         cpy #255
+         beq mnjump3
+         lda mdr,y
+         ldx mdx,y
+         ldy #0
+         jsr invt
+         ldy menu
+         ldx mpt1,y
+         lda mpt2,y
+         tay
+         lda ch40
+         jsr clsw
+mnjump3  ldx #0
+         ldy #0
+         lda #0
+         jsr setc
+         jsr udram
+         ldx #<tpln1
+         ldy #>tpln1
+         lda #1
+         jsr writ
+         lda chosen
+         rts
+
+chosen   .byte 0
+spz      .byte 0
+spx      .byte 0
+upp      .byte 0
+
+getxt    sta chars
+         lda #0
+         sta upp
+         sta spz
+         lda #1
+         sta spx
+         ldx y
+         dex
+         bmi gtjump11
+         lda spacz,x
+         sta spz
+         lda x
+         sta spx
+gtjump11 ldx #0
+gtloop1  lda $0277,x
+         cmp #192
+         bcc gtjump2
+         sec
+         sbc #$60
+gtjump2  cmp #13
+         beq gtjump8
+         cmp #31
+         bcc gtjump1
+         cmp #128
+         bcs gtjump1
+gtjump8  sta chars+1,x
+         inx
+         cpx #10
+         bne gtloop1
+gtjump1  inx
+         stx chn
+         sec
+         lda $c6
+         sbc chn
+         sta $c6
+         inc $c6
+         ldy #0
+gtloop2  lda $0277,x
+         sta $0277,y
+         iny
+         inx
+         cpx #10
+         bne gtloop2
+         clc
+         lda dcl+1
+         sta $fb
+         adc chn
+         sta $fd
+         lda dcm+1
+         sta $fc
+         adc #0
+         sta $fe
+         ldx #$ff
+         ldy #0
+gtloop3  lda ($fb),y
+         sta ($fd),y
+         lda $fb
+         cmp cpos
+         bne gtjump6
+         lda $fc
+         cmp cpos+1
+         bne gtjump6
+         jmp gtjump7
+gtjump6  dec $fb
+         cpx $fb
+         bne gtjump4
+         dec $fc
+gtjump4  dec $fd
+         cpx $fd
+         bne gtloop3
+         dec $fe
+         jmp gtloop3
+gtjump7  ldy #0
+         lda cpos
+         sta $fb
+         lda cpos+1
+         sta $fc
+gtloop4  lda chars,y
+         cmp #32
+         bne gtjump9
+         lda spz
+         cmp spx
+         bcc gtjump10
+         lda #1
+         sta upp
+gtjump10 lda #32
+gtjump9  sta ($fb),y
+         inc spx
+         iny
+         cpy chn
+         bne gtloop4
+         clc
+         lda dcl+1
+         adc chn
+         sta dcl+1
+         lda dcm+1
+         adc #0
+         sta dcm+1
+         lda cpos
+         adc chn
+         sta cpos
+         lda cpos+1
+         adc #0
+         sta cpos+1
+         ldx y
+         inx
+gtloop5  clc
+         lda linel,x
+         adc chn
+         sta linel,x
+         lda lineh,x
+         adc #0
+         sta lineh,x
+         inx
+         cpx #22
+         bne gtloop5
+         lda y
+         sec
+         sbc upp
+         sta y
+         ldx y
+         lda linel,x
+         ldy lineh,x
+         tax
+         lda y
+         jsr udtdoc
+         rts
+
+chars    .text "          "
+chn      .byte 0
+df       .byte 0
+
+dltxt    ldx #0
+dtloop1  lda $0277,x
+         cmp #20
+         bne dtjump1
+         inx
+         cpx #10
+         bne dtloop1
+dtjump1  inx
+         stx chn
+         sec
+         lda $c6
+         sbc chn
+         sta $c6
+         inc $c6
+         ldy #0
+dtloop2  lda $0277,x
+         sta $0277,y
+         iny
+         inx
+         cpx #10
+         bne dtloop2
+         sec
+         lda cpos
+         sbc #1
+         sta $fb
+         lda cpos+1
+         sbc #0
+         sta $fc
+         clc
+         lda $fb
+         adc chn
+         sta $fd
+         lda $fc
+         adc #0
+         sta $fe
+         sec
+         lda cpos
+         sbc dcl
+         sta df
+         sec
+         lda cpos
+         sbc chn
+         sta cpos
+         lda cpos+1
+         sbc #0
+         sta cpos+1
+         cmp dcm
+         beq dtjump5
+         bcs dtjump4
+         jmp dtjump6
+dtjump5  lda cpos
+         cmp dcl
+         bcs dtjump4
+dtjump6  lda dcl
+         sta cpos
+         lda dcm
+         sta cpos+1
+         sec
+         lda dcl+1
+         sbc df
+         sta dcl+1
+         sta $fb
+         lda dcm+1
+         sbc #0
+         sta dcm+1
+         sta $fc
+         ldy #0
+         tya
+         sta ($fb),y
+         lda #0
+         sta chn
+         jmp dtjump7
+dtjump4  ldy #0
+dtloop3  lda ($fd),y
+         sta ($fb),y
+         beq dtjump2
+         clc
+         lda $fb
+         adc #1
+         sta $fb
+         lda $fc
+         adc #0
+         sta $fc
+         lda $fd
+         adc #1
+         sta $fd
+         lda $fe
+         adc #0
+         sta $fe
+         jmp dtloop3
+dtjump2  sec
+         lda dcl+1
+         sbc chn
+         sta dcl+1
+         lda dcm+1
+         sbc #0
+         sta dcm+1
+dtjump7  ldx y
+         inx
+dtloop5  sec
+         lda lineh,x
+         beq dtjump8
+         lda linel,x
+         sbc chn
+         sta linel,x
+         lda lineh,x
+         sbc #0
+         sta lineh,x
+         inx
+         cpx #22
+         bne dtloop5
+dtjump8  ldx y
+         jsr scla
+         stx $fb
+         sty $fc
+         ldy lm
+         jsr findx
+         sty misc
+         ldx y
+         lda cpos
+         sec
+         sbc linel,x
+         clc
+         adc x
+         sec
+         sbc chn
+         cmp misc
+         bcs dtjump3
+         dec y
+         lda y
+         cmp #255
+         bne dtjump3
+         inc y
+         ldx #3
+         jsr scdnx
+dtjump3  ldx y
+         lda linel,x
+         ldy lineh,x
+         tax
+         lda y
+         jsr udtdoc
+         rts
+
+input    sta char
+         lda $d015
+         and #$e0
+         sta $d015
+         lda #0
+         sta blk
+         lda flash
+         beq ipjump1
+         jsr invc
+         lda #0
+         sta flash
+ipjump1  lda #1
+         sta flcnt
+         lda char
+         cmp #20
+         bne ipjump36
+         jmp dltxt
+ipjump36 cmp #"{home}"
+         bne ipjump38
+         ldx #0
+         jsr scla
+         stx $fb
+         sty $fc
+         ldy lm
+         jsr findx
+         sty x
+         lda #0
+         sta y
+         lda linel
+         sta cpos
+         lda lineh
+         sta cpos+1
+         clc
+         tya
+         adc #<(scr80+$f0)
+         sta spos
+         lda #>(scr80+$f0)
+         adc #0
+         sta spos+1
+         rts
+ipjump38 cmp #13
+         beq ipjump34
+         cmp #29
+         beq ipjump33
+         cmp #22
+         bcc ipjump33
+         cmp #192
+         bcs ipjump34
+         cmp #128
+         bcs ipjump33
+ipjump34 jmp getxt
+ipjump33 cmp #"{right}"
+         beq ipjump29
+         jmp ipjump2
+ipjump29 lda cpos
+         sta $fb
+         sta $fd
+         lda cpos+1
+         sta $fc
+         sta $fe
+         ldy #0
+         lda ($fb),y
+         bne iploop1
+         jmp ipjump10
+iploop1  inc $fb
+         bne ipjump3
+         inc $fc
+ipjump3  lda ($fb),y
+         beq ipjump6
+         cmp #13
+         bcc iploop1
+ipjump6  lda $fb
+         sta cpos
+         lda $fc
+         sta cpos+1
+         ldy #0
+         lda ($fd),y
+         cmp #13
+         beq ipjp2
+         cmp #31
+         bcc ipjump10
+ipjp2    lda spos
+         sta $fb
+         lda spos+1
+         sta $fc
+         ldx x
+         ldy #0
+iploop2  inc $fb
+         bne ipjump5
+         inc $fc
+ipjump5  inx
+         lda ($fb),y
+         cmp #$80
+         bne ipjump4
+         cpx rm
+         bcc iploop2
+         inc y
+         ldx y
+         jsr scla
+         stx $fb
+         sty $fc
+         ldy lm
+         jsr findx
+         sty x
+         sty wantx
+         lda y
+         cmp #21
+         bne ipjump28
+         dec y
+         jsr ipjump24
+ipjump28 ldx y
+         jsr scla
+         txa
+         clc
+         adc x
+         sta spos
+         tya
+         adc #0
+         sta spos+1
+         jmp ipjump10
+ipjump4  stx x
+         lda $fb
+         sta spos
+         lda $fc
+         sta spos+1
+ipjump10 rts
+ipjump2  cmp #"{left}"
+         beq ipjump15
+         jmp ipjump7
+ipjump15 lda cpos
+         cmp dcl
+         bne ipjump9
+         lda cpos+1
+         cmp dcm
+         bne ipjump9
+         jmp ipjump8
+ipjump9  lda cpos
+         sta $fb
+         lda cpos+1
+         sta $fc
+         lda dcl
+         sta curd
+         lda dcm
+         sta curd+1
+         ldy #0
+iploop3  dec $fb
+         lda $fb
+         cmp #$ff
+         bne ipjump12
+         dec $fc
+ipjump12 lda ($fb),y
+         cmp #13
+         bcs ipjump16
+         lda $fb
+         cmp curd
+         bne iploop3
+         lda $fc
+         cmp curd+1
+         bne iploop3
+         jmp ipjump8
+ipjump16 lda $fb
+         sta cpos
+         lda $fc
+         sta cpos+1
+         ldy #0
+         lda ($fb),y
+         cmp #13
+         beq ipjp1
+         cmp #31
+         bcc ipjump8
+ipjp1    lda spos
+         sta $fb
+         lda spos+1
+         sta $fc
+         ldx x
+         ldy #0
+iploop4  dec $fb
+         lda $fb
+         cmp #$ff
+         bne ipjump13
+         dec $fc
+ipjump13 dex
+         lda ($fb),y
+         cmp #$80
+         bne ipjump14
+         cpx lm
+         bcs iploop4
+         lda #79
+         sta wantx
+         dec y
+         lda y
+         cmp #255
+         bne ipjump30
+         inc y
+         jsr ipjump31
+ipjump30 ldx y
+         jsr scla
+         stx $fb
+         sty $fc
+         ldy #78
+iploop5  dey
+         lda ($fb),y
+         cmp #$80
+         beq iploop5
+         tya
+         sta x
+         clc
+         adc $fb
+         sta spos
+         lda $fc
+         adc #0
+         sta spos+1
+         jmp ipjump8
+ipjump14 lda $fb
+         sta spos
+         lda $fc
+         sta spos+1
+         stx x
+ipjump8  rts
+ipjump7  cmp #"{down}"
+         beq ipjump24
+         jmp ipjump17
+ipjump24 ldx y
+         inx
+         lda lineh,x
+         beq ipjump19
+         cpx #21
+         bne ipjump20
+         ldx #3
+         jsr scupx
+         ldx linel+21
+         ldy lineh+21
+         lda #20+$80
+         jsr udtdoc
+         ldx y
+ipjump20 jsr ipcalc
+ipjump19 rts
+ipjump17 cmp #"{up}"
+         bne ipjump26
+ipjump31 ldx y
+         lda linehx,x
+         beq ipjump26
+         dex
+         bpl ipjump27
+         ldx #3
+         jsr scdnx
+         ldx linelx
+         ldy linehx
+         lda #$80
+         jsr udtdoc
+         ldx y
+ipjump27 jsr ipcalc
+ipjump26 rts
+
+ipcalc   stx y
+         jsr scla
+         stx $fb
+         sty $fc
+         ldy wantx
+         jsr findx
+         tya
+         clc
+         adc $fb
+         sta spos
+         lda $fc
+         adc #0
+         sta spos+1
+         sty x
+         dey
+         ldx #0
+ipcloop2 lda ($fb),y
+         cmp #$80
+         beq ipcjump3
+         inx
+ipcjump3 dey
+         bpl ipcloop2
+         ldy y
+         lda linel,y
+         sta $fb
+         lda lineh,y
+         sta $fc
+         ldy #0
+         cpx #0
+         beq ipcjump2
+ipcloop1 lda ($fb),y
+         beq ipcjump1
+         cmp #31
+         bcs ipcjump1
+         iny
+         jmp ipcloop1
+ipcjump1 iny
+         dex
+         bne ipcloop1
+ipcjump2 tya
+         clc
+         adc $fb
+         sta cpos
+         lda $fc
+         adc #0
+         sta cpos+1
+         rts
+
+findx    lda #$80
+fxloop1  cmp ($fb),y
+         bne fxjump1
+         dey
+         bne fxloop1
+fxloop2  cmp ($fb),y
+         bne fxjump1
+         iny
+         bne fxloop2
+fxjump1  rts
+
+xfo      .byte 0
+wantx    .byte 2
+curd     .byte 0,0
+char     .byte 0
+tb1      .byte 0,12,24,31,33,35,39,44
+tb2      .byte 2,0,3,4,5,0,6
+         .byte 8,0,9,10,11
+         .byte 12,13,14,0,15,0,16,17
+         .byte 0,19,18,7
+         .byte 20,21,0,22,23,24,25
+         .byte 27,28
+         .byte 32,33
+         .byte 38,0,40,44
+         .byte 51,52,0,55,56
+         .byte 57,58
+tpln1    .text " InterWord v1.00  Pr"
+         .text "ojekt: Navnl{pound}s      "
+         .text "                    "
+tq       .text "RAM:          {cm l}{cm y}{cm u}{cm d}{sh @}{cm f}"
+         .byte 0
+tpln2    .text " Projekt  Redigering"
+         .text "  V[lg  Mark{pound}r  Skri"
+         .text "ft  Layout  Diverse "
+         .text " Specielt           "
+         .byte 0
+mndat    .text " @@@@@@@  aaaaaaaaaa"
+         .text "  bbbb  cccccc  dddd"
+         .text "dd  eeeeee  fffffff "
+         .text " gggggggg           "
+menu     .byte 255
+nwmn     .byte 0
+mchc     .byte 0
+mdx      .byte 1,10,22,28,36,44,52,61
+mdr      .byte 7,10,4,6,6,6,7,8
+mnps     .byte 0
+mnwt     .byte 0
+mnht     .byte 0
+opt      .byte 255
+nmpt     .byte 0
+minx     .byte 0
+maxx     .byte 0
+
+udform   stx rcnt
+         lda #1
+         ldx #0
+ufloop1  lda #128
+         sta bitmap+$0241,x
+         sta bitmap+$0251,x
+         sta bitmap+$0261,x
+         sta bitmap+$0271,x
+         lda #0
+         sta bitmap+$0249,x
+         sta bitmap+$0259,x
+         sta bitmap+$0269,x
+         sta bitmap+$0279,x
+         inx
+         inx
+         cpx #8
+         bne ufloop1
+         lda rcnt
+         asl a
+         asl a
+         asl a
+         asl a
+         tax
+         clc
+         adc #3
+         tay
+         lda #4
+         sta rcnt
+ufloop2  lda bitmap+$0240,x
+         sta bitmap+$0240,y
+         lda bitmap+$0248,x
+         sta bitmap+$0248,y
+         inx
+         inx
+         iny
+         iny
+         tya
+         and #7
+         cmp #1
+         bne ufjump1
+         tya
+         sec
+         sbc #8
+         tay
+ufjump1  dec rcnt
+         bne ufloop2
+         rts
+
+invc     ldx cform
+         jsr ishp
+         lda x
+         ldy ch40
+         beq icjump1
+         sec
+         sbc fx
+         asl a
+icjump1  tax
+         cpx #78
+         bcs icjump2
+         iny
+         tya
+         ldy y
+         iny
+         iny
+         iny
+         jsr invt
+icjump2  ldx #0
+         jsr ishp
+         rts
+
+cform    .byte 0
+
+adjrul   lda crd
+         cmp rm
+         bne arjump1
+arloop2  lda fire
+         bne arjump3
+         ldx fcx
+         ldy #2
+         jsr clch
+         beq arloop2
+         lda lm
+         cmp crd
+         bcs arjump3
+         lda rm
+         cmp crd
+         beq arloop2
+         ldy ruler
+         lda rll,y
+         clc
+         adc rm
+         tax
+         lda rul1,x
+         ldx rm
+         jsr udr1c
+         lda crd
+         sta rm
+         ldy ruler
+         sta rms,y
+         tax
+         lda #$e6
+         jsr u1jump1
+arjump3  lda fire
+         beq arloop2
+         jmp udtscr
+arjump1  cmp lm
+         bne arjump2
+arloop3  lda fire
+         bne arjump4
+         ldx fcx
+         ldy #2
+         jsr clch
+         beq arloop3
+         ldx crd
+         cpx rm
+         bcs arjump4
+         lda crd
+         cmp lm
+         beq arloop3
+         ldx ruler
+         lda rll,x
+         clc
+         adc lm
+         tax
+         lda rul1,x
+         ldx lm
+         jsr udr1c
+         lda crd
+         sta lm
+         ldy ruler
+         sta lms,y
+         tax
+         lda #$e5
+         jsr u1jump1
+arjump4  lda fire
+         beq arloop3
+         jmp udtscr
+arjump2  ldx ruler
+         lda rll,x
+         clc
+         adc crd
+         tax
+         lda rul1,x
+         eor #1
+         sta rul1,x
+         ldx crd
+         jsr udr1c
+arloop1  lda fire
+         beq arloop1
+         jmp udtscr
+
+udr1c    and #$01
+         clc
+         adc #$e7
+         tay
+         txa
+u1loop1  cmp #0
+         beq u1jump3
+         sec
+         sbc #10
+         bpl u1loop1
+         jmp u1jump2
+u1jump3  iny
+         iny
+u1jump2  tya
+u1jump1  sta u1c
+         ldy #2
+         lda ch40
+         jsr setc
+         ldx #<u1c
+         ldy #>u1c
+         lda #1
+         jsr writ
+         rts
+
+u1c      .byte 0,0,0
+
+keys     .byte 0,"{cm d}","{cm r}","{cm s}","{cm h}"
+         .byte "{cm a}","{cm n}","{f5}","{cm k}","{cm t}"
+         .byte "{cm q}","{cm x}","{cm c}","{cm v}","{cm e}"
+         .byte "{cm d}","{cm z}","{cm j}","{cm m}","{f7}"
+         .byte "{f8}","{f1}","{f2}","{f3}","{f4}"
+         .byte 0,"{cm b}","{cm y}",0,0
+         .byte 0,"{cm p}","{cm i}",0,0
+         .byte 0,0,"{cm -}",0,0
+         .byte 0,0,0,0,0
+         .byte 0,0,0,0,0
+         .byte "{cm f}","{orange}",0,0,"{cm u}"
+         .byte "{cm g}",0,"{cm l}"
+
+optl     .word o0,o2,o3,o4,o5
+         .word o6,o7,o8,o9,o10
+         .word o11,o12,o13,o14,o15
+         .word o16,o17,o18,o19,o20
+         .word o21,o22,o23,o24,o25
+         .word o0,o27,o28,o0,o0
+         .word o0,o32,o33,o0,o0
+         .word o0,o0,o38,o0,o0
+         .word o0,o0,o0,o0,o0
+         .word o0,o0,o0,o0,o0
+         .word o51,o52,o0,o0,o55
+         .word o56,o57,o58
+
+o0       rts
+
+o7       jsr dfl2
+         ldx #0
+         jsr udruler
+         rts
+
+o18      jsr dfs2
+         rts
+
+o2t      .text "{sh -}bn dokument:"
+
+o2       lda #<o2t
+         ldy #>o2t
+         ldx #13
+         jsr inpu
+         lda ipx
+         bne o2j5
+o2j6     rts
+o2j5     sta naml
+         jsr cpn
+aabn     jsr ttfn
+         lda #$0b
+         sta $d011
+         jsr chkdir
+         ldx #$1b
+         stx $d011
+         cmp #0
+         beq o2j6
+         lda dcl+1
+         sta $fb
+         lda dcm+1
+         sta $fc
+         lda #<mtop
+         sta $fd
+         lda #>mtop
+         sta $fe
+         ldy #0
+o2l1     sec
+         lda $fb
+         sbc #1
+         sta $fb
+         lda $fc
+         sbc #0
+         sta $fc
+         lda $fd
+         sbc #1
+         sta $fd
+         lda $fe
+         sbc #0
+         sta $fe
+         lda ($fb),y
+         sta ($fd),y
+         lda $fb
+         cmp cpos
+         bne o2l1
+         lda $fc
+         cmp cpos+1
+         bne o2l1
+         lda #$08
+         tax
+         ldy #$00
+         jsr $ffba
+         lda #$0b
+         sta $d011
+         lda #16
+         ldx #<flnm
+         ldy #>flnm
+         jsr $ffbd
+         lda #$00
+         ldy cpos+1
+         sty $c4
+         ldx cpos
+         stx $c3
+         jsr $f4a5
+         lda #$1b
+         sta $d011
+         lda $ae
+         sta $fb
+         lda $af
+         sta $fc
+         ldy #0
+o2l2     lda ($fd),y
+         sta ($fb),y
+         inc $fb
+         bne o2j2
+         inc $fc
+o2j2     inc $fd
+         bne o2j3
+         inc $fe
+o2j3     lda $fe
+         cmp #>mtop
+         bne o2l2
+         lda $fb
+         sta dcl+1
+         lda $fc
+         sta dcm+1
+         jsr udtscr
+         rts
+
+o3       ldx #<o3q
+         ldy #>o3q
+         jsr ask
+         cmp #1
+         bne o3j1
+         lda dcl
+         sta cpos
+         sta dcl+1
+         sta linel
+         sta $fb
+         lda dcm
+         sta cpos+1
+         sta dcm+1
+         sta lineh
+         sta $fc
+         ldy #0
+         tya
+         sta ($fb),y
+         jsr udtscr
+o3j1     rts
+
+o3q      .text "Sletter dokument"
+         .byte 13
+         .text "Sikker?"
+         .byte 13
+
+sa       .word 0
+ea       .word 0
+
+o4       lda #$0b
+         sta $d011
+         jsr ttfn
+         jsr chkdir
+         cmp #0
+         beq o4jump2
+         lda #$1b
+         sta $d011
+         ldx #<o4r
+         ldy #>o4r
+         jsr ask
+         cmp #0
+         bne o4jump3
+         rts
+o4jump3  lda #$0b
+         sta $d011
+         lda #18
+         ldx #<dlfl
+         ldy #>dlfl
+         jsr $ffbd
+         lda #$0f
+         tay
+         ldx #$08
+         jsr $ffba
+         jsr $ffc0
+         jsr $ffe7
+o4jump2  lda dcl
+         sta sa
+         lda dcm
+         sta sa+1
+         lda dcl+1
+         sec
+         sbc #1
+         sta ea
+         lda dcm+1
+         sbc #0
+         sta ea+1
+         lda blk
+         beq o4jump1
+         lda blkb
+         sta sa
+         lda blkb+1
+         sta sa+1
+         lda blke
+         clc
+         adc #1
+         sta ea
+         lda blke+1
+         adc #1
+         sta ea+1
+o4jump1  lda #$01
+         tay
+         ldx #$08
+         jsr $ffba
+         lda #16
+         ldx #<flnm
+         ldy #>flnm
+         jsr $ffbd
+         lda sa
+         ldy sa+1
+         sta $c1
+         sty $c2
+         lda ea
+         ldx ea+1
+         sta $ae
+         stx $af
+         jsr $f5ed
+         jsr cpn2
+         lda #$1b
+         sta $d011
+         rts
+
+o4r      .text "Filen eksisterer"
+         .byte 13
+         .text "Overskriv?"
+         .byte 13
+
+o5t      .text "Arkiver som:"
+
+o5       lda #<o5t
+         ldy #>o5t
+         ldx #12
+         jsr inpu
+         lda ipx
+         bne o5j1
+         rts
+o5j1     jsr cpn
+         jmp o4
+
+o6       jsr print
+         rts
+
+o8       jsr diskmen
+         cmp #255
+         beq o8j1
+         ldx naml
+         beq o8j1
+         cmp #0
+         bne o8j2
+         ldx #<o8r
+         ldy #>o8r
+         jsr ask
+         cmp #0
+         beq o8j2
+         lda #$0b
+         sta $d011
+         lda naml
+         clc
+         adc #3
+         ldx #<dlfl
+         ldy #>dlfl
+         jsr $ffbd
+         lda #$0f
+         tay
+         ldx #$08
+         jsr $ffba
+         jsr $ffc0
+         jsr $ffe7
+         lda #$1b
+         sta $d011
+         rts
+o8j2     sta misc
+         ldx #0
+o8l1     lda dcnames,x
+         sta tpln1+27,x
+         inx
+         cpx naml
+         bne o8l1
+         lda #32
+o8l2     sta tpln1+27,x
+         inx
+         cpx #16
+         bne o8l2
+         ldx #0
+         ldy #0
+         lda #0
+         jsr setc
+         ldx #<tpln1
+         ldy #>tpln1
+         lda #1
+         jsr writ
+         lda misc
+         cmp #1
+         bne o8j3
+         jmp o4
+o8j3     jmp aabn
+o8j1     rts
+
+o8r      .text "Sletter filen!"
+         .byte 13
+         .text "Sikker?"
+         .byte 13
+
+o9       ldx #4
+o9l6     lda dfval,x
+         sta dfbku,x
+         dex
+         bpl o9l6
+o9l1     lda fire
+         beq o9l1
+o9l3     lda dfval
+         jsr tod
+         sty o9a
+         sta o9a+1
+         lda dfval+1
+         jsr tod
+         sty o9a+24
+         sta o9a+25
+         lda dfval+2
+         jsr tod
+         sty o9a+48
+         sta o9a+49
+         ldx dfval+3
+         ldy #11
+         jsr mpl
+         ldy #0
+o9l4     lda o9d1,x
+         beq o9j2
+         sta o9b,y
+         iny
+         inx
+         bne o9l4
+o9j2     lda dfval+4
+         asl a
+         asl a
+         sta misc
+         lda #$38
+         sec
+         sbc misc
+         sta o9b+22
+         ldx #<o9w
+         ldy #>o9w
+         jsr opnw
+o9l2     jsr $ffe4
+         cmp #"{arrow left}"
+         bne o9x1
+         jmp o9j10
+o9x1     lda fire
+         bne o9l2
+         jsr ctm
+         cmp #10
+         bcc o9l2
+         cmp #13
+         bcs o9j3
+         sec
+         sbc #10
+         tax
+         lda misc
+         cmp #45
+         bcc o9l2
+         cmp #49
+         bcs o9l2
+         sec
+         sbc #45
+         lsr a
+         tay
+         lda dfval,x
+         sta misc2
+         cpy #0
+         bne o9j4
+         dec dfval,x
+         jmp o9j5
+o9j4     inc dfval,x
+o9j5     lda dfval
+         cmp dfval+1
+         beq o9j6
+         cmp #79
+         bcs o9j6
+         lda dfval+1
+         cmp #79
+         bcs o9j6
+         lda dfval+2
+         beq o9j6
+         cmp #11
+         bcs o9j6
+         lda misc+1
+         cmp #12
+         bne o9j9
+         jmp o9l1
+o9j9     jmp o9l3
+o9j6     lda misc2
+         sta dfval,x
+         jmp o9l1
+o9j3     cmp #13
+         bne o9j7
+         lda misc
+         cmp #30
+         bcc o9l2x
+         cmp #48
+         bcs o9l2x
+         lda dfval+3
+         eor #1
+         sta dfval+3
+         jmp o9l1
+o9j7     cmp #14
+         bne o9j8
+         lda misc
+         cmp #30
+         bcc o9l2x
+         cmp #48
+         bcs o9l2x
+         lda dfval+4
+         eor #1
+         sta dfval+4
+         jmp o9l1
+o9j8     cmp #16
+         bne o9l2x
+         lda misc
+         cmp #30
+         bcc o9l2x
+         cmp #48
+         bcs o9l2x
+         cmp #42
+         bcs o9j10
+         cmp #36
+         bcs o9j11
+         jsr dfs
+         jsr dfs2
+o9j11    ldx #<o9w
+         ldy #>o9w
+         lda ch40
+         jsr clsw
+         lda ch40
+         cmp dfval+4
+         beq o9j12
+         jsr chmode
+o9j12    jsr dfset
+         jsr udtscr
+         rts
+o9j10    ldx #<o9w
+         ldy #>o9w
+         lda ch40
+         jsr clsw
+         ldx #4
+o9l5     lda dfbku,x
+         sta dfval,x
+         dex
+         bpl o9l5
+         rts
+o9l2x    jmp o9l2
+tod      tax
+         lda dctab,x
+         and #$f0
+         lsr a
+         lsr a
+         lsr a
+         lsr a
+         ora #$30
+         tay
+         cpy #$30
+         bne o9j1
+         ldy #$20
+o9j1     lda dctab,x
+         and #$0f
+         ora #$30
+         rts
+
+o9w      .byte 28,7,22,11
+         .byte "{222}",64,20,"{cm k}","{cm t}"
+         .text "{cm asterisk}  Opstartsvalg:     {cm asterisk}"
+         .byte "{cm asterisk}",64,20,"{cm k}","{cm asterisk}"
+         .text "{cm asterisk} Venstre marg:  {cm +}{reverse on}"
+o9a      .text "  {reverse on}{cm g}{cm asterisk}"
+         .text "{cm asterisk} H{pound}jre marg:    {cm +}{reverse on}"
+         .text "  {reverse on}{cm g}{cm asterisk}"
+         .text "{cm asterisk} Blink per sek: {cm +}{reverse on}"
+         .text "  {reverse on}{cm g}{cm asterisk}"
+         .text "{cm asterisk} Mark{pound}r: "
+o9b      .text "Blok       {cm asterisk}"
+         .text "{cm asterisk} Bredde: "
+         .text "80 tegn    {cm asterisk}"
+         .byte "{cm asterisk}",64,20,"{cm i}","{cm asterisk}"
+         .text "{cm asterisk} {cm z}Ark.{cm p}{cm z}Brug{cm p}{cm z}Glem{cm p} {cm asterisk}"
+         .byte "{sh space}",64,20,"{cm i}","{cm @}"
+o9d1     .text "Blok      "
+         .byte 0
+         .text "Understreg"
+         .byte 0
+dfbku    .byte 0,0,0,0,0
+
+o10      ldx #<o10w
+         ldy #>o10w
+         jsr opnw
+o10l1    jsr $ffe4
+         cmp #"{arrow left}"
+         beq o10j1
+         lda fire
+         bne o10l1
+o10j1    ldx #<o10w
+         ldy #>o10w
+         lda ch40
+         jsr clsw
+         rts
+o10w     .byte 30,10,22,9
+         .byte "{222}",64,20,"{cm k}","{cm t}"
+         .text "{cm asterisk} Interword 64 v1.00 {cm asterisk}"
+         .byte "{cm asterisk}",64,20,"{cm i}","{cm asterisk}"
+         .text "{cm asterisk} Programmeret af    {cm asterisk}"
+         .text "{cm asterisk}       Martin Olsen {cm asterisk}"
+         .byte "{cm asterisk}",64,20," ","{cm asterisk}"
+         .text "{cm asterisk} (C) Copyright 1991 {cm asterisk}"
+         .text "{cm asterisk}Interactivision Aps.{cm asterisk}"
+         .byte "{sh space}",64,20,"{cm i}","{cm @}"
+
+o11      ldx #<o11q
+         ldy #>o11q
+         jsr ask
+         cmp #0
+         beq o11j1
+         jmp ($fffc)
+o11j1    rts
+o11q     .text "Forlad Interword!"
+         .byte 13
+         .text "Sikker?"
+         .byte 13
+
+o12      lda blk
+         beq o12jump1
+         jsr copy
+         jsr erase
+o12jump1 lda #0
+         sta blk
+         lda #$c0
+         sta $d015
+         rts
+
+o13      lda blk
+         beq o13jump1
+         jsr copy
+o13jump1 rts
+
+o14      lda endbuf+1
+         cmp #255
+         beq o14jump1
+         lda blk
+         bne o14jump1
+         jsr paste
+o14jump1 rts
+
+o15      lda blk
+         beq o15jump1
+         jsr erase
+o15jump1 lda #0
+         sta blk
+         lda #$c0
+         sta $d015
+         rts
+
+o16      ldx ruler
+         lda rll,x
+         tax
+         ldy #0
+o16loop1 lda dfrul,y
+         sta rul1,x
+         inx
+         iny
+         cpy #80
+         bne o16loop1
+         ldx ruler
+         lda dfrm
+         sta rms,x
+         lda dflm
+         sta lms,x
+         jsr udtscr
+         rts
+
+o17      ldx ruler
+         lda rll,x
+         tax
+         ldy #80
+o17loop1 lda rul1,x
+         and #$fe
+         sta rul1,x
+         inx
+         dey
+         bne o17loop1
+         jsr udtscr
+         rts
+
+o19wnd   .byte 32,10,16,4
+         .byte "{222}",64,14,"{cm k}","{cm t}"
+         .text "{cm asterisk} V[lg margin: {cm asterisk}"
+o19m     .text "{cm asterisk} {cm z} 1{cm p}{cm z} 2{cm p}{cm z} 3{cm p} {cm asterisk}"
+         .byte "{sh space}",64,14,"{cm i}","{cm @}"
+oru      .byte 0
+
+o19      lda #32
+         sta o19m+3
+         sta o19m+7
+         sta o19m+11
+         lda ruler
+         sta oru
+         asl a
+         asl a
+         adc #3
+         tax
+         lda #42
+         sta o19m,x
+         ldx #<o19wnd
+         ldy #>o19wnd
+         jsr opnw
+o19loop1 jsr $ffe4
+         cmp #"{arrow left}"
+         bne o19j1
+         lda oru
+         sta ruler
+         ldx #<o19wnd
+         ldy #>o19wnd
+         lda ch40
+         jsr clsw
+         rts
+o19j1    lda fire
+         bne o19loop1
+         ldx fcx
+         ldy fcy
+         jsr clch
+         lda rcrd+1
+         cmp #12
+         bne o19jump1
+         lda rcrd
+         sec
+         sbc #34
+         lsr a
+         lsr a
+         cmp #3
+         bcs o19jump1
+         sta misc
+         asl a
+         asl a
+         clc
+         adc #34
+         sta misc2
+         tax
+         ldy #12
+         lda #4
+         jsr invt
+o19loop2 lda fire
+         beq o19loop2
+         ldx misc2
+         ldy #12
+         lda #4
+         jsr invt
+         ldx flx
+         ldy fly
+         jsr clch
+         lda rcrd+1
+         cmp #12
+         bne o19jump1
+         lda rcrd
+         sec
+         sbc #34
+         lsr a
+         lsr a
+         cmp misc
+         bne o19jump1
+         sta ruler
+         jsr udtscr
+         rts
+o19jump1 jmp o19loop1
+
+o20      lda cpos
+         sta mark
+         lda cpos+1
+         sta mark+1
+         lda x
+         sta marc
+         lda y
+         sta marc+1
+         rts
+
+mark     .byte 0,0
+marc     .byte 0,0
+
+o21      lda blk
+         beq o21jump3
+         rts
+o21jump3 lda cpos
+         sta blke
+         lda cpos+1
+         sta blke+1
+         lda mark
+         sta blkb
+         lda mark+1
+         sta blkb+1
+         lda cpos+1
+         cmp mark+1
+         bne o21jump1
+         lda cpos
+         cmp mark
+o21jump1 bcs o21jump2
+         lda cpos
+         sta blkb
+         lda cpos+1
+         sta blkb+1
+         lda mark
+         sta blke
+         lda mark+1
+         sta blke+1
+o21jump2 lda marc
+         sec
+         sbc fx
+         sta marc
+         lda x
+         sec
+         sbc fx
+         ldx ch40
+o21loop1 asl marc
+         asl a
+         dex
+         bpl o21loop1
+         ldx #0
+         stx misc
+         clc
+         adc #$0c
+         asl a
+         sta $d008
+         rol misc
+         lda marc
+         adc #$0c
+         asl a
+         sta $d006
+         rol misc
+         rol misc
+         rol misc
+         rol misc
+         lda $d010
+         and #$e7
+         ora misc
+         sta $d010
+         lda y
+         asl a
+         asl a
+         asl a
+         adc #$32+24
+         sta $d009
+         lda marc+1
+         asl a
+         asl a
+         asl a
+         adc #$32+24
+         sta $d007
+         lda #$3f+adsp
+         sta screen+$03fb
+         lda #$5e+adsp
+         sta screen+$03fc
+         lda #1
+         sta blk
+         lda $d015
+         ora #$18
+         sta $d015
+         lda $d01d
+         and #$e7
+         ldx ch40
+         beq o21jump4
+         ora #$18
+o21jump4 sta $d01d
+         rts
+
+type     .byte 0
+
+o22      lda #0
+o22j3    sta type
+         lda cpos
+         sta $fb
+         lda cpos+1
+         sta $fc
+         ldy #0
+o22l1    lda ($fb),y
+         beq o22j6
+         jsr comp
+         beq o22j1
+o22j6    dec $fb
+         lda $fb
+         cmp #$ff
+         bne o22j7
+         dec $fc
+o22j7    lda #>doc1
+         cmp $fc
+         bcc o22l1
+         bne o22j1
+         lda $fb
+         cmp #<doc1
+         bcs o22l1
+o22j1    iny
+         lda ($fb),y
+         jsr comp
+         beq o22j1
+         tya
+         clc
+         adc $fb
+         sta $fb
+         sta blkb
+         lda $fc
+         adc #0
+         sta $fc
+         sta blkb+1
+         ldy #0
+o22l2    iny
+         lda ($fb),y
+         beq o22j2
+         jsr comp
+         beq o22j2
+         jmp o22l2
+o22j2    dey
+         tya
+         clc
+         adc $fb
+         sta blke
+         lda $fc
+         adc #0
+         sta blke+1
+         jsr setsp
+         rts
+comp     cmp #13
+         beq o22j4
+         ldx type
+         bne o22j5
+         cmp #32
+         beq o22j4
+         rts
+o22j5    cpx #1
+         bne o22j4
+         cmp #"!"
+         beq o22j4
+         cmp #"?"
+         beq o22j4
+         cmp #"."
+         beq o22j4
+         cmp #":"
+o22j4    rts
+
+o23      ldx y
+         lda linel,x
+         sta blkb
+         lda lineh,x
+         sta blkb+1
+         lda lineh+1,x
+         bne o23j1
+         sec
+         lda dcl+1
+         sbc #1
+         sta blke
+         lda dcm+1
+         sbc #0
+         sta blke+1
+         jmp o23j2
+o23j1    sec
+         lda linel+1,x
+         sbc #1
+         sta blke
+         lda lineh+1,x
+         sbc #0
+         sta blke+1
+o23j2    jsr setsp
+         rts
+
+o24      lda #1
+         jmp o22j3
+
+o25      lda #2
+         jmp o22j3
+
+setsp    lda blkb
+         ldx blkb+1
+         jsr ssget
+         sty $d007
+         lda $d010
+         and #$e7
+         sta $d010
+         txa
+         asl a
+         sta $d006
+         lda #$00
+         bcc sej1
+         lda #$08
+sej1     ora $d010
+         sta $d010
+         lda blke
+         ldx blke+1
+         jsr ssget
+         sty $d009
+         txa
+         asl a
+         sta $d008
+         lda #$00
+         bcc sej2
+         lda #$10
+sej2     ora $d010
+         sta $d010
+         lda $d015
+         ora #$18
+         sta $d015
+         lda $d01d
+         and #$e7
+         ldx ch40
+         beq sej3
+         ora #$18
+sej3     sta $d01d
+         lda #$3f+adsp
+         sta screen+$03fb
+         lda #$5e+adsp
+         sta screen+$03fc
+         lda #1
+         sta blk
+         rts
+
+ssget    sta $d9
+         stx $da
+         lda $da
+         cmp lineh
+         bcc ssgj2
+         bne ssgj4
+         lda $d9
+         cmp linel
+         bcc ssgj2
+ssgj4    ldx #255
+ssgl1    inx
+         cpx #22
+         beq ssgj2
+         lda lineh,x
+         beq ssgj1
+         cmp $da
+         bcc ssgl1
+         bne ssgj1
+         lda linel,x
+         cmp $d9
+         bcc ssgl1
+         beq ssgl1
+ssgj1    dex
+         stx misc
+         lda linel,x
+         ldy lineh,x
+         tax
+         lda misc
+         ora #$40
+         jsr udtdoc
+         lda $db
+         ldx ch40
+         beq ssgj3
+         sec
+         sbc fx
+         bcc ssgj2
+         cmp width
+         bcs ssgj2
+         asl a
+ssgj3    asl a
+         adc #$0c
+         tax
+         lda $dc
+         asl a
+         asl a
+         asl a
+         adc #74
+         tay
+         rts
+ssgj2    ldx #0
+         ldy #0
+         rts
+
+o27      ldx dcl
+         stx cpos
+         ldy dcm
+         sty cpos+1
+         lda #0
+         jsr udtdoc
+         rts
+
+o28      sec
+         lda dcl+1
+         sbc #1
+         sta cpos
+         sta $fb
+         lda dcm+1
+         sbc #0
+         sta cpos+1
+         sta $fc
+findc    lda lineh+21
+         beq o28x1
+         cmp cpos+1
+         bcc o28x1
+         beq o28j2
+         lda linel+21
+         cmp cpos
+         bcs o28j2
+o28x1    ldx #20
+o28l2    lda lineh,x
+         beq o28x2
+         cmp cpos+1
+         bcc o28j3
+         bne o28x2
+         lda cpos
+         cmp linel,x
+         bcs o28j3
+o28x2    dex
+         bne o28l2
+o28j3    stx misc
+         ldy lineh,x
+         lda linel,x
+         tax
+         lda misc
+         jsr udtdoc
+         rts
+o28j2    ldx #255
+         ldy #0
+o28l1    lda ($fb),y
+         cmp #13
+         beq o28j1
+         dec $fb
+         cpx $fb
+         bne o28l1
+         dec $fc
+         bne o28l1
+o28j1    clc
+         lda $fb
+         adc #1
+         sta $fb
+         lda $fc
+         adc #0
+         sta $fc
+         ldx $fb
+         ldy $fc
+         lda #0
+         jsr udtdoc
+         rts
+
+o32      lda #23
+         jsr tobuf
+         rts
+
+o33      lda #24
+         jsr tobuf
+         rts
+
+o38      lda #22
+         jsr tobuf
+         rts
+
+o51      ldx #17
+         lda #32
+o51x2    sta o51b,x
+         dex
+         bne o51x2
+         lda #"{reverse on}"
+         sta o51b
+         lda #0
+         sta lp
+         ldx fp
+         beq o51x3
+         dex
+         beq o51x3
+o51x5    lda o51a,x
+         ora #$40
+         sta o51a,x
+         dex
+         bne o51x5
+o51x3    ldx #<o51a
+         ldy #>o51a
+         lda fp
+         jsr o51s1
+         sta fp
+         cpx #1
+         beq o51
+         cpx #3
+         beq o51j9
+         cpx #4
+         beq o51j10
+o51l2    ldx #<o51b
+         ldy #>o51b
+         lda lp
+         jsr o51s1
+         sta lp
+         cpx #2
+         beq o51l2
+         cpx #3
+         beq o51j9
+         cpx #4
+         beq o51j10
+         jmp o51x3
+o51j9    ldx #<o51w
+         ldy #>o51w
+         lda ch40
+         jsr clsw
+         rts
+o51j10   ldx #<o51w
+         ldy #>o51w
+         lda ch40
+         jsr clsw
+         jsr fandr
+         lda lp
+         beq o51x4
+         lda dcl
+         sta cpos
+         sta linel
+         lda dcm
+         sta cpos+1
+         sta lineh
+         lda #0
+         sta linehx
+         jsr udtscr
+o51x4    rts
+o51s1    stx ad
+         stx $fb
+         sty ad+1
+         sty $fc
+         sta p
+         tay
+         iny
+         lda #45
+         sta ($fb),y
+         ldx #<o51w
+         ldy #>o51w
+         jsr opnw
+o51l1    lda ad
+         sta $fb
+         lda ad+1
+         sta $fc
+         jsr $ffe4
+         cmp #"{arrow left}"
+         bne o51x1
+         ldx #3
+         rts
+o51x1    cmp #0
+         beq o51j5x
+         jmp o51j5
+o51j5x   lda fire
+         bne o51l1
+         jsr ctm
+         cmp #11
+         bcc o51l1
+         cmp #13
+         bcs o51j6
+         lda misc
+         cmp #28
+         bcc o51l1
+         cmp #56
+         bcs o51l1
+         ldy p
+         iny
+         lda #32
+         sta ($fb),y
+         lda misc+1
+         sec
+         sbc #10
+         tax
+         lda p
+         rts
+o51j6    bne o51l1
+         lda misc
+         cmp #30
+         bcc o51l1
+         cmp #40
+         bcs o51j7
+         lda o51c
+         eor #$78
+         sta o51c
+         ldx #<o51w
+         ldy #>o51w
+         jsr opnw
+o51l3    lda fire
+         beq o51l3
+         jmp o51l1
+o51j7    cmp #42
+         bcc o51l1
+         cmp #46
+         bcs o51j8
+         ldy p
+         iny
+         lda #32
+         sta ($fb),y
+         ldx #3
+         lda p
+         rts
+o51j8    cmp #48
+         bcc o51l1x
+         cmp #52
+         bcs o51l1x
+         ldy p
+         iny
+         lda #32
+         sta ($fb),y
+         ldx #4
+         lda p
+         rts
+o51j5    ldy p
+         cmp #20
+         bne o51j1
+         cpy #0
+         beq o51j1
+         dey
+         sty p
+         lda #"{reverse on}"
+         sta ($fb),y
+         iny
+         lda #45
+         sta ($fb),y
+         iny
+         lda #32
+         sta ($fb),y
+         jmp o51j4
+o51j1    cmp #13
+         beq o51j2
+         cmp #32
+         bcc o51l1x
+         cmp #192
+         bcs o51j3
+         cmp #96
+         bcs o51l1x
+o51j3    cpy #16
+         beq o51l1x
+         sta ($fb),y
+         iny
+         sty p
+         lda #"{reverse on}"
+         sta ($fb),y
+         iny
+         lda #45
+         sta ($fb),y
+o51j4    ldx #<o51w
+         ldy #>o51w
+         jsr opnw
+o51l1x   jmp o51l1
+o51j2    iny
+         lda #32
+         sta ($fb),y
+         lda p
+         ldx #0
+frout    rts
+fandr    lda cpos
+         sta $fd
+         clc
+         adc #1
+         sta $fb
+         lda cpos+1
+         sta $fe
+         adc #0
+         sta $fc
+         ldy #0
+         lda ($fb),y
+         beq frout
+         lda ($fd),y
+         beq frout
+         ldx #$ff
+         lda o51c
+         cmp #32
+         beq frj9
+         ldx #$3f
+frj9     stx case
+         ldy #0
+frl7     lda o51a,y
+         and case
+         sta o51a,y
+         iny
+         cpy fp
+         bne frl7
+frl6     ldy #0
+frl1     lda ($fb),y
+         and case
+         cmp o51a,y
+         bne frj1
+         iny
+         cpy fp
+         bne frl1
+         jmp frj2
+frj1     inc $fb
+         bne frj3
+         inc $fc
+frj3     lda $fb
+         cmp dcl+1
+         bne frl1
+         lda $fc
+         cmp dcm+1
+         bne frl1
+         lda case
+         cmp #$3f
+         bne frj10
+         ldy #0
+frl8     lda o51a,y
+         ora #$40
+         sta o51a,y
+         iny
+         cpy fp
+         bne frl8
+frj10    rts
+frj2     lda lp
+         bne frx1
+         jmp found
+frx1     lda fp
+         cmp lp
+         beq frj4
+         bcc frj5
+         lda $fb
+         sta $fd
+         lda $fc
+         sta $fe
+frl2     ldy fp
+         lda ($fd),y
+         ldy lp
+         sta ($fd),y
+         inc $fd
+         bne frj6
+         inc $fe
+frj6     cmp #0
+         bne frl2
+         jmp frj4
+frj5     sec
+         lda dcl+1
+         sbc fp
+         sta $fd
+         lda dcm+1
+         sbc #0
+         sta $fe
+         ldx #$ff
+frl4     ldy fp
+         lda ($fd),y
+         ldy lp
+         sta ($fd),y
+         dec $fd
+         cpx $fd
+         bne frj7
+         dec $fe
+frj7     lda $fe
+         cmp $fc
+         beq frj8
+         bcs frl4
+         jmp frj4
+frj8     lda $fd
+         cmp $fb
+         bcs frl4
+frj4     ldy #0
+frl5     lda o51b,y
+         sta ($fb),y
+         iny
+         cpy lp
+         bne frl5
+         sec
+         lda dcl+1
+         sbc fp
+         sta dcl+1
+         lda dcm+1
+         sbc #0
+         sta dcm+1
+         clc
+         lda dcl+1
+         adc lp
+         sta dcl+1
+         lda dcm+1
+         adc #0
+         sta dcm+1
+         clc
+         lda $fb
+         adc lp
+         sta $fb
+         lda $fc
+         adc #0
+         sta $fc
+         jmp frl6
+found    lda $fb
+         sta cpos
+         lda $fc
+         sta cpos+1
+         jsr findc
+fol1     lda fire
+         beq fol1
+         rts
+
+ad       .byte 0,0
+o51w     .byte 26,10,28,5
+         .byte "{222}",64,26,"{cm k}","{cm t}"
+         .text "{cm asterisk} Find:   {reverse on}"
+o51a     .text "{reverse on}                 {cm asterisk}"
+         .text "{cm asterisk} Erstat: {reverse on}"
+o51b     .text "{reverse on}                 {cm asterisk}{cm asterisk} "
+o51c     .text "x {cm z}Ign.Stor{cm p} {cm z}Glem{cm p} "
+         .text "{cm z}OK{cm p} {cm asterisk}"
+         .byte "{sh space}",64,26,"{cm i}","{cm @}"
+fp       .byte 0
+lp       .byte 0
+p        .byte 0
+case     .byte 0
+
+o52      lda #0
+         ldx #5
+o52l1    sta wrdc,x
+         dex
+         bpl o52l1
+         lda dcl
+         sta $fb
+         lda dcm
+         sta $fc
+         lda dcl+1
+         sta $fd
+         lda dcm+1
+         sta $fe
+         lda blk
+         beq o52j1
+         lda blkb
+         sta $fb
+         lda blkb+1
+         sta $fc
+         lda blke
+         sta $fd
+         lda blke+1
+         sta $fe
+o52j1    lda #1
+         sta wtp
+         ldy #0
+         sty wdl
+o52l2    lda ($fb),y
+         cmp #32
+         bcc o52j5x
+         bne o52j2
+         ldx #0
+         jmp o52j4
+o52j5x   jmp o52j5
+o52j2    cmp #"."
+         beq o52j3
+         cmp #":"
+         beq o52j3
+         cmp #"!"
+         beq o52j3
+         cmp #"?"
+         beq o52j3
+         cmp #0
+         beq o52j3
+         ldx #2
+         inc wdl
+         jmp o52j4
+o52j3    ldx #1
+o52j4    cpx wtp
+         cpx wtp
+         beq o52j5
+         lda wtp
+         stx wtp
+         ldx wdl
+         stx misc
+         ldx #0
+         stx wdl
+         cmp #0
+         beq o52j5
+         cmp #1
+         bne o52j6
+         inc perc
+         bne o52j5
+         inc perc+1
+         jmp o52j5
+o52j6    inc wrdc
+         bne o52j7
+         inc wrdc+1
+o52j7    lda misc
+         cmp #6
+         bcc o52j5
+         inc lwrc
+         bne o52j5
+         inc lwrc+1
+o52j5    inc $fb
+         bne o52j8
+         inc $fc
+o52j8    lda $fb
+         cmp $fd
+         bne o52j9
+         lda $fc
+         cmp $fe
+         beq o52j10
+o52j9    ldy #0
+         jmp o52l2
+o52j10   lda wrdc
+         bne o52j11
+         lda wrdc+1
+         bne o52j11
+         rts
+o52j11   lda perc
+         bne o52j12
+         lda perc+1
+         bne o52j12
+         inc perc
+o52j12   lda wrdc
+         sta nmrt
+         lda wrdc+1
+         sta nmrt+1
+         lda perc
+         sta denm
+         lda perc+1
+         sta denm+1
+         jsr diw
+         sty lix
+         ldx lwrc
+         ldy #100
+         jsr mpl
+         stx nmrt
+         sty nmrt+1
+         ldx lwrc+1
+         ldy #100
+         jsr mpl
+         txa
+         clc
+         adc nmrt+1
+         sta nmrt+1
+         lda wrdc
+         sta denm
+         lda wrdc+1
+         sta denm+1
+         jsr diw
+         tya
+         clc
+         adc lix
+         sta lix
+         tax
+         lda #$20
+         sta o52a+1
+         ldy #0
+         lda dctab,x
+         and #$f0
+         lsr a
+         lsr a
+         lsr a
+         lsr a
+         ora #$30
+         sta o52a
+         cmp #$30
+         beq o52j13
+         iny
+o52j13   lda dctab,x
+         and #$0f
+         ora #$30
+         sta o52a,y
+         ldx #<o52w
+         ldy #>o52w
+         jsr opnw
+o52l3    lda fire
+         beq o52l3
+o52l4    jsr $ffe4
+         cmp #"{arrow left}"
+         beq o52x1
+         lda fire
+         bne o52l3
+o52x1    ldx #<o52w
+         ldy #>o52w
+         lda ch40
+         jsr clsw
+         rts
+
+o52w     .byte 28,10,12,3
+         .byte "{222}",64,10,"{cm k}","{cm t}"
+         .text "{cm asterisk} Lix: "
+o52a     .text "    {cm asterisk}"
+         .byte "{sh space}",64,10,"{cm i}","{cm @}"
+wrdc     .byte 0,0
+lwrc     .byte 0,0
+perc     .byte 0,0
+lix      .byte 0
+wtp      .byte 0
+wdl      .byte 0
+
+o55      lda #$c0
+o55j1    sta misc
+         lda blk
+         beq o55j2
+         lda blkb
+         sta $fb
+         lda blkb+1
+         sta $fc
+         ldy #0
+o55l1    lda ($fb),y
+         cmp #192
+         bcs o55j3
+         cmp #92
+         bcs o55j4
+         cmp #65
+         bcc o55j4
+o55j3    and #$3f
+         ora misc
+         sta ($fb),y
+o55j4    inc $fb
+         bne o55j5
+         inc $fc
+o55j5    lda $fc
+         cmp blke+1
+         bcc o55l1
+         bne o55j6
+         lda blke
+         cmp $fb
+         bcs o55l1
+o55j6    jsr udtscr
+         lda #0
+         sta blk
+         lda $d015
+         and #$e7
+         sta $d015
+o55j2    rts
+
+o56      lda #$40
+         jmp o55j1
+
+o57      jsr chmode
+         rts
+
+o58      ldx #<o58w
+         ldy #>o58w
+         jsr opnw
+         jsr o58l1
+         ldx #<o58w
+         ldy #>o58w
+         lda ch40
+         jsr clsw
+         lda $d800
+         sta $d9cd
+         sta $d9ce
+         sta $d9cd+40
+         sta $d9ce+40
+         sta $d9cd+80
+         sta $d9ce+80
+         rts
+o58l1    lda col1
+         sta $d9cd
+         sta $d9ce
+         lda col2
+         sta $d9cd+40
+         sta $d9ce+40
+         lda col3
+         sta $d9cd+80
+         sta $d9ce+80
+o58l3    lda fire
+         beq o58l3
+o58l2    jsr $ffe4
+         cmp #"{arrow left}"
+         beq o58x1
+         lda fire
+         bne o58l2
+         jsr ctm
+         cmp #11
+         bcc o58j1
+         cmp #14
+         beq o58j3
+         bcs o58j1
+         sec
+         sbc #11
+         tax
+         lda misc
+         cmp #41
+         bcc o58j1
+         cmp #47
+         bcs o58j1
+         cmp #44
+         bcc o58j2
+         inc col1,x
+         jmp o58j1
+o58j2    dec col1,x
+o58j1    jmp o58l1
+o58j3    lda misc
+         cmp #34
+         bcc o58j1
+         cmp #40
+         bcs o58j4
+o58l4    lda fire
+         beq o58l4
+o58x1    rts
+o58j4    cmp #42
+         bcc o58j1
+         cmp #46
+         bcs o58j1
+         jsr o58l4
+scol     ldx #0
+         lda col3
+o59l5    sta $d800,x
+         sta $d900,x
+         sta $da00,x
+         sta $db00,x
+         inx
+         bne o59l5
+         sta $d02c
+         sta $d02d
+         sta $d02e
+         sta $0286
+         lda col1
+         sta $d021
+         lda col2
+         sta $d020
+         rts
+
+o58w     .byte 32,8,16,8
+         .byte "{222}",64,14,"{cm k}","{cm t}"
+         .text "{cm asterisk}  Farver:     {cm asterisk}"
+         .byte "{cm asterisk}",64,14," ","{cm asterisk}"
+         .text "{cm asterisk} Sk[rm  {cm +}    {cm g}{cm asterisk}"
+         .text "{cm asterisk} Kant   {cm +}    {cm g}{cm asterisk}"
+         .text "{cm asterisk} Tekst  {cm +}    {cm g}{cm asterisk}"
+         .text "{cm asterisk} {cm z}Glem{cm p}  {cm z}OK{cm p} {cm asterisk}"
+         .byte "{sh space}",64,14,"{cm i}","{cm @}"
+
+cpn2     ldx #0
+cnl3     lda dcnames,x
+         sta tpln1+27,x
+         inx
+         cpx naml
+         bne cnl3
+         jmp cnj1
+cpn      ldx #0
+cnl1     lda ipp+1,x
+         sta tpln1+27,x
+         sta dcnames,x
+         inx
+         cpx ipx
+         bne cnl1
+         stx naml
+cnj1     lda #32
+cnl2     sta tpln1+27,x
+         inx
+         cpx #15
+         bne cnl2
+         ldx #0
+         ldy #0
+         lda #0
+         jsr setc
+         ldx #<tpln1
+         ldy #>tpln1
+         lda #1
+         jsr writ
+         rts
+
+ipw      .byte 30,9,20,5
+         .byte "{222}",64,18,"{cm k}","{cm t}"
+ip1      .text "{cm asterisk}                  {cm asterisk}"
+         .byte "{cm asterisk}",64,18,"{cm k}","{cm asterisk}"
+         .text "{cm asterisk} "
+ipp      .text "{reverse on}                {reverse on} {cm asterisk}"
+         .byte "{sh space}",64,18,"{cm i}","{cm @}"
+ipx      .byte 0
+
+inpu     sta $fb
+         sty $fc
+         stx misc
+         ldy #0
+ipl1     lda ($fb),y
+         sta ip1+2,y
+         iny
+         cpy misc
+         bne ipl1
+         lda #32
+ipl2     sta ip1+2,y
+         iny
+         cpy #17
+         bne ipl2
+         lda #"{reverse on}"
+         sta ipp
+ipl4     ldx #<ipw
+         ldy #>ipw
+         jsr opnw
+         lda ipx
+         adc #32
+         tax
+         ldy #12
+         lda #1
+         jsr invt
+ipl3     jsr $ffe4
+         cmp #"{arrow left}"
+         beq ipjx
+         cmp #0
+         beq ipl3
+         cmp #13
+         beq ipj1
+         cmp #20
+         bne ipj2
+         ldx ipx
+         beq ipl3
+         dex
+         lda #$20
+         sta ipp+1,x
+         stx ipx
+         jmp ipl4
+ipj2     cmp #32
+         bcc ipl3
+         cmp #192
+         bcs ipj3
+         cmp #96
+         bcs ipl3
+ipj3     ldx ipx
+         cpx #15
+         beq ipl3
+         sta ipp+1,x
+         inx
+         stx ipx
+         jmp ipl4
+ipjx     lda #32
+         ldx #15
+ipjx2    sta ipp+1,x
+         dex
+         bpl ipjx2
+         lda #0
+         sta ipx
+ipj1     ldx #<ipw
+         ldy #>ipw
+         lda ch40
+         jsr clsw
+         lda #133
+         sta ipp
+         rts
+
+movxbar  ldx #24
+         lda ch40
+         beq mxloop1
+         lda crd
+         lsr a
+         sta misc2
+         cmp #38
+         beq mxjump1
+         cmp #16
+         beq mxjump2
+mxloop1  lda fire
+         beq mxloop1
+         rts
+mxjump1  ldx #28
+mxjump2  stx misc
+         ldy #24
+         lda #2
+         jsr invt
+mxloop2  lda fire
+         beq mxloop2
+         ldx fcx
+         ldy fcy
+         jsr clch
+         ldx misc
+         ldy #24
+         lda #2
+         jsr invt
+         lda crd
+         lsr a
+         cmp misc2
+         bne mxjump3
+         cmp #38
+         bne mxjump4
+         clc
+         lda fx
+         adc #20
+         cmp #39
+         bcc mxjump5
+         lda #39
+mxjump5  sta fx
+         jsr slide
+         jmp mxjump3
+mxjump4  sec
+         lda fx
+         sbc #20
+         bpl mxjump6
+         lda #0
+mxjump6  sta fx
+         jsr slide
+mxjump3  ldx fx
+         jsr setx
+         lda width
+         sta all+2
+         ldx #<all
+         ldy #>all
+         lda ch40
+         jsr updt
+         lda #1
+         sta flcnt
+         rts
+
+misc2    .byte 0,0
+
+udram    sec
+         lda #<mtop
+         sbc dcl+1
+         sta nmrt
+         lda #>mtop
+         sbc dcm+1
+         sta nmrt+1
+         ldx #$00
+url1     txa
+         asl a
+         tay
+         lda dtab,y
+         sta denm
+         lda dtab+1,y
+         sta denm+1
+         stx misc
+         jsr diw
+         ldx misc
+         tya
+         ora #$30
+         sta tq+5,x
+         lda nmrt+1
+         sta nmrt
+         lda nmrt+2
+         sta nmrt+1
+         inx
+         cpx #5
+         bne url1
+         rts
+
+ctm      lda fcx
+         sec
+         sbc #$0c
+         lsr a
+         sta misc
+         lda fcy
+         sec
+         sbc #50
+         lsr a
+         lsr a
+         lsr a
+         sta misc+1
+         rts
+
+dtab     .word 10000,1000,100,10,1
+dflm     .byte 8
+dfrm     .byte 72
+dfrul    .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
+         .text "a@@@@@@@a@@@@@@@a@@@"
+         .text "@@@@a@@@@@@@a@@@@@@@"
