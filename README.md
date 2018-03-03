@@ -2,7 +2,7 @@
 
 This project contains the original 6510 assembler code for the Commodore 64 port of Interword. The software was written in 1992 on a commision from Interactivision, a software company based in Silkeborg, Denmark. I was 17 at the time. The code is mainly committed to github as an artefact of historical interest.
 
-The files were recovered from an old 5.25 inch floppy disk which had survived the past two decades in my parent's attic. It's a backup disk which was made at some point so it's most likely not the final version of the product.
+The files were recovered from an old 5.25 inch floppy disk which had survived the past two decades in my parents' attic. It's a backup disk which was made at some point so it's most likely not the final version of the product.
 
 The original disks, along with all original packaging and manuals, and merchandise for [unrelated software](http://www.lemonamiga.com/games/details.php?id=1900) developed by the same company, unfortunately fell victim to a cleanup back in the late 1990s, adhering to the "Ain't never gonna need this old junk again" principle. Sorry.
 
@@ -26,7 +26,7 @@ The code was split due to memory constraints; it simply wasn't possible to fit t
 
 As far as I recall, the individual sources would be compiled to binary, and the binaries would be loaded to their respective memory locations.
 
-I don't remember any furrter details and I won't be bothered to try.
+I don't remember any further details and I won't be bothered to try.
 
 ## Reviews
 
@@ -37,3 +37,9 @@ Upon its release, the software was reviewed in a Danish computer magazine. As I 
 This guy is pretty nice to the software when you consider the fact that he uncovers several major glitches in less than two minutes:
 
 https://www.youtube.com/watch?v=4W8n6y6cuOU
+
+# Acknowledgements
+
+Thanks to [Mads Darø Kristensen](https://twitter.com/madsdk) for converting the floppy disk to D64 format.
+
+Files retrieved and converted using [DiskImagery64](http://lallafa.de/blog/c64-projects/diskimagery64/) and [TMPview](http://style64.org/release/tmpview-v1.2-style)
