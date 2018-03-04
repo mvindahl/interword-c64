@@ -24,9 +24,7 @@ The code was split due to memory constraints; it simply wasn't possible to fit t
 
 ## Building
 
-As far as I recall, the individual sources would be compiled to binary, and the binaries would be loaded to their respective memory locations.
-
-I don't remember any further details and I won't be bothered to try.
+See [this wiki page](https://github.com/mvindahl/interword-c64/wiki/Building-from-sources-in-VICE)
 
 ## Reviews
 
