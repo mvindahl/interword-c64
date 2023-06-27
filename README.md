@@ -36,6 +36,12 @@ This guy is pretty nice to the software when you consider the fact that he uncov
 
 https://www.youtube.com/watch?v=4W8n6y6cuOU
 
+## Interword C64 in print media
+
+There was a review in a Danish computer magazine.
+
+https://github.com/mvindahl/interword-c64/wiki/Review-of-Interword-in-COMputer-magazine
+
 # Acknowledgements
 
 Thanks to [Mads Darø Kristensen](https://twitter.com/madsdk) for converting the floppy disk to D64 format.
