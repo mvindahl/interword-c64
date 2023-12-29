@@ -26,10 +26,6 @@ The code was split due to memory constraints; it simply wasn't possible to fit t
 
 See [this wiki page](https://github.com/mvindahl/interword-c64/wiki/Building-from-sources-in-VICE)
 
-## Reviews
-
-Upon its release, the software was reviewed in a Danish computer magazine. As I recall, the gist of the review was that it was a nice achievement but also pretty unusable.
-
 ## Interword C64 on Youtube
 
 This guy is pretty nice to the software when you consider the fact that he uncovers several major glitches in less than two minutes:
